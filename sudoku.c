@@ -68,7 +68,8 @@ void writePuzzle()
   int i;
   for ( i = 0; i < 81; ++i)
     {
-      printf("%d", puzzle[i]);
+      if (puzzle[i] != 0 ) printf("%d", puzzle[i]);
+      else printf(".");
     }
   printf("\n\n");
 }
