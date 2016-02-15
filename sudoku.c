@@ -4,103 +4,135 @@
 /***************************************/
 
 
-#define TRUE 1
 #include <stdio.h>
 
-int puzzle[81];                         /* global variable for puzzle */
-
-/*
- * This function reads in a sudoku puzzle, line-by-line.  It checks
- * each puzzle to see if the puzzle is 'well-formed'.  Well-formed
- * means the puzzle has the correct number of entries (81), that 
- * all entries are either numbers or the '.' character, and that
- * there are no duplicates in rows, columns, and boxes.
- *                                                                 
- * Upon encountering an EOF, it sets a code that the loop in main()
- * uses to exit the program.
+/* This function reads in a sudoku puzzle, line-by-line.  It checks each
+ * read character to see if it is valid \n, EOF, '.', or 0 - 9.  If it
+ * finds EOF, sets an error bit and returns immediately.  If it finds an 
+ * invalid character, it sets an error bit.  It maintains a counter for 
+ * the number of characters read to give an error for a puzzle that is too
+ * long or too short if true sets an error bit. 
+ * 
+ * errorCodes:
+ * bit 1 - end of file
+ * bit 2 - invalid character in puzzle
+ * bit 3 - too many characters in puzzle
+ * bit 4 - not enough characters in puzzle
  *
- * Well-formed puzzle will return 0
+ * If no errors, int readPuzzle() will return 0.
  */
-int readPuzzle()
+int readPuzzle(int puzzle[])
+{
+  int c, i, errorCode;
+  c = i = errorCode = 0;
+ 
+  while ( (c = getchar() ) != '\n' )
+    {
+      if ( c == EOF )                               /* check for EOF */
+        {
+          errorCode |= 1;
+          return errorCode;                         /* reached EOF, return */
+        }
+      putchar(c);                                   /* echo puzzle */
+      if ( c == '.') c = '0';                       /* assign . to 0 */
+      if ( (c < '0') || (c > '9') )
+        {
+          errorCode |= (1 << 1);                    /* set bit 2 */
+        }
+      if ( i == 81 )
+        {
+          errorCode |= (1 << 2);                    /* set bit 3 */
+          i -= 81;                                  /* avoid array overflow */
+        }
+      puzzle[i] = c - '0';                          /* turn c in to number */
+      ++i;
+    }
+  
+  putchar('\n');                                    /* done with puzzle echo */
+
+  if ( ( (errorCode & 4) != 4) && (i < 81))         /* not enough characters */
+    {
+      errorCode |= (1 << 3);                        /* set bit 4 */
+    }
+ 
+  return errorCode;
+}
+
+
+/* This function check rows for duplicates, sets bit 5 in errorCode if
+ * a duplicate is found.  Returns errorCode.
+ */
+int validatePuzzleRows(int puzzle[])
 {
   int c, i, j, errorCode;
   c = i = j = errorCode = 0;
- /* errorCodes:
-  * bit 1 - invalid character in puzzle
-  * bit 2 - too many characters in puzzle
-  * bit 3 - not enough characters in puzzle
-  * bit 4 - bad row
-  * bit 5 - bad column
-  * bit 6 - bad box
-  * bit 7 - end of file
-  */
- 
- while ( (c = getchar() ) != '\n' )
-   {
-     if ( c == EOF ) return (1 << 6);              /* set bit 7 and return */
-     putchar(c);
-     if ( c == '.') c = '0';                       /* assign . to 0 */
-     if ( (c < '0') || (c > '9') ) errorCode |= 1; /* set bit 1 */
-     if ( i == 81 )
-       {
-         errorCode |= (1 << 1);                    /* set bit 2 */
-         i -= 81;                                  /* avoid array overflow */
-       }
-     puzzle[i] = c - '0';                          /* turn c in to number */
-     ++i;
-   }
- putchar('\n');
- if ( ( (errorCode & 2) != 2) && (i < 81))         /* not enough characters */
-   {
-     errorCode |= (1 << 2);                        /* set bit 3 */
-   }
- /* check rows for duplicates */
- for (i = 0; i < 9; i++)
-   {
-     for (j = i+1; j < 9; j++)
-       {
-         if (puzzle[i] != 0 && (puzzle[i] == puzzle[j]) )
-           {
-             errorCode |= (1 << 3);                /* set bit 4 */
-           }
-       }
-   }
 
- /* check columns for duplicates */
- for (i = 0; i < 81; i += 9)
-   {
-     for (j = i+9; j < 81; j +=9)
-       {
-         if (puzzle[i] != 0 && (puzzle[i] == puzzle[j]) )
-           {
-             errorCode |= (1 << 4);               /* set bit 5 */
-           }
-       }
-   }
-
-
- /* check boxes for duplicates */
-
- 
- return errorCode;
+  for (i = 0; i < 9; i++)
+    {
+      for (j = i+1; j < 9; j++)
+        {
+          if (puzzle[i] != 0 && (puzzle[i] == puzzle[j]) )
+            {
+              errorCode |= (1 << 4);                /* set bit 5 */
+            }
+        }
+    }
+  return errorCode;
 }
 
-/*
- * This function logically reduces the given puzzle by using the rules of
+/* This function checks columns for duplicates, sets bit 6 in errorCode
+ * if a duplicate is found.  Returns errorCode.
+ */
+int validatePuzzleCols(int puzzle[])
+{
+  int c, i, j, errorCode;
+  c = i = j = errorCode = 0;
+  
+  for (i = 0; i < 81; i += 9)
+    {
+      for (j = i+9; j < 81; j +=9)
+        {
+          if (puzzle[i] != 0 && (puzzle[i] == puzzle[j]) )
+            {
+              errorCode |= (1 << 5);               /* set bit 6 */
+            }
+        }
+    }
+  return errorCode;
+}
+
+/* This function check boxes for duplicates, sets bit 7 in errorCode 
+ * if a duplicate is found.  Returns errorCode.
+ */
+int validatePuzzleBoxes(int puzzle[])
+{
+  int errorCode;
+  errorCode = 0;
+  /* WRITE ME */
+ 
+  return errorCode;
+}
+
+/* This function logically reduces the given puzzle by using the rules of
  * Sudoku to fill in any spaces that can be found by inspecting rows,
  * columns, and boxes.
  */
-void crunchPuzzle()
+void crunchPuzzle(int puzzle[])
 {
   /* WRITE ME */
 }
 
-void solvePuzzle()
+/* This function uses recursive backtracking to solve the puzzle.
+ */
+void solvePuzzle(int puzzle[])
 {
   /* WRITE ME */
 }
 
-void writePuzzle()
+
+/* This function writes out the (hopefully solved) puzzle.
+ */
+void writePuzzle(int puzzle[])
 {
   int i;
   for ( i = 0; i < 81; ++i)
@@ -112,24 +144,31 @@ void writePuzzle()
 }
 
 
-int main(void)
+int main(int argc, char *argv[])
 {
+  int puzzle[81];
   int puzzleError;
-  while (TRUE)                                     /* read puzzles until EOF */
+  while (1)                                        /* read puzzles until EOF */
     {
-      puzzleError = readPuzzle();
-      if (puzzleError & (1 << 6)) break;           /* reached EOF */
-      if (puzzleError)      
+      puzzleError = readPuzzle(puzzle);
+      if (puzzleError & 1) break;                  /* reached EOF, done! */
+      puzzleError |= validatePuzzleRows(puzzle);
+      puzzleError |= validatePuzzleCols(puzzle);
+      puzzleError |= validatePuzzleBoxes(puzzle);
+
+      /* Command line argument -e used to print error numbers for debugging */
+      if (puzzleError && (argc == 2))      
         {
           printf("Error");
-          printf(" - %d", puzzleError);            /* comment out line */
+          printf(" - %d", puzzleError);            
           printf("\n\n");
         }
-      else                                         /* puzzle is 'well formed */
+      else if (puzzleError) printf("Error\n\n");
+      else                                         /* puzzle is 'well-formed' */
         {
-          crunchPuzzle();
-          solvePuzzle();
-          writePuzzle();
+          crunchPuzzle(puzzle);
+          solvePuzzle(puzzle);
+          writePuzzle(puzzle);
         }
     }
 }
