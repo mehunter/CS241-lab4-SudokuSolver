@@ -64,8 +64,8 @@ int readPuzzle(int puzzle[])
  */
 int validatePuzzleRows(int puzzle[])
 {
-  int c, i, j, errorCode;
-  c = i = j = errorCode = 0;
+  int i, j, errorCode;
+  i = j = errorCode = 0;
 
   for (i = 0; i < 9; i++)
     {
@@ -85,8 +85,8 @@ int validatePuzzleRows(int puzzle[])
  */
 int validatePuzzleCols(int puzzle[])
 {
-  int c, i, j, errorCode;
-  c = i = j = errorCode = 0;
+  int i, j, errorCode;
+  i = j = errorCode = 0;
   
   for (i = 0; i < 81; i += 9)
     {
@@ -106,10 +106,9 @@ int validatePuzzleCols(int puzzle[])
  */
 int validatePuzzleBoxes(int puzzle[])
 {
-  int errorCode;
-  errorCode = 0;
   /* WRITE ME */
- 
+  int errorCode;
+  if (puzzle[0]) errorCode = 0;
   return errorCode;
 }
 
@@ -120,6 +119,7 @@ int validatePuzzleBoxes(int puzzle[])
 void crunchPuzzle(int puzzle[])
 {
   /* WRITE ME */
+  if (puzzle[0]) return;
 }
 
 /* This function uses recursive backtracking to solve the puzzle.
@@ -127,6 +127,7 @@ void crunchPuzzle(int puzzle[])
 void solvePuzzle(int puzzle[])
 {
   /* WRITE ME */
+  if (puzzle[0]) return;
 }
 
 
@@ -157,7 +158,8 @@ int main(int argc, char *argv[])
       puzzleError |= validatePuzzleBoxes(puzzle);
 
       /* Command line argument -e used to print error numbers for debugging */
-      if (puzzleError && (argc == 2))      
+      if (puzzleError && (argc == 2) && (argv[1][0] == '-') &&
+          (argv[1][1] == 'e') && (argv[1][2] == '\0'))
         {
           printf("Error");
           printf(" - %d", puzzleError);            
@@ -171,4 +173,5 @@ int main(int argc, char *argv[])
           writePuzzle(puzzle);
         }
     }
+  return 0;
 }
