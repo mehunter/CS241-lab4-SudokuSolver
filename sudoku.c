@@ -161,9 +161,7 @@ int main(int argc, char *argv[])
       if (puzzleError && (argc == 2) && (argv[1][0] == '-') &&
           (argv[1][1] == 'e') && (argv[1][2] == '\0'))
         {
-          printf("Error");
-          printf(" - %d", puzzleError);            
-          printf("\n\n");
+          printf("Error - %d\n\n", puzzleError);            
         }
       else if (puzzleError) printf("Error\n\n");
       else                                         /* puzzle is 'well-formed' */
