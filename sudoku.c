@@ -67,7 +67,7 @@ int validatePuzzleRows(int puzzle[])
   int i, j, errorCode;
   i = j = errorCode = 0;
 
-  for (i = 0; i < 9; i++)
+  for (i = 0; i < 81; i += 9)
     {
       for (j = i+1; j < 9; j++)
         {
