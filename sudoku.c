@@ -102,13 +102,34 @@ int validatePuzzleCols(int puzzle[])
 }
 
 /* This function check boxes for duplicates, sets bit 7 in errorCode 
- * if a duplicate is found.  Returns errorCode.
+ * if a duplicate is found.  Returns errorCode.  Loop through each box
+ * converting the box into a mini-array, then checking the array for
+ * duplicates.
  */
 int validatePuzzleBoxes(int puzzle[])
 {
-  /* WRITE ME */
-  int errorCode;
-  if (puzzle[0]) errorCode = 0;
+  int  boxToRow[9];
+  int i, j, k, box, boxDelta, errorCode;
+  i = j = k = box, boxDelta, errorCode = 0;
+  for (box = 0; box < 9; box++)
+    {
+      boxDelta = ((box % 3) * 3) + ((box / 3) * 27);
+      for (k = 0; k < 9; k++)
+        {
+          boxToRow[k] = puzzle[ ((k / 3) * 9) + (k % 3) + boxDelta];
+        }
+
+      for (i = 0; i < 9; i++)
+        {
+          for (j = i+1; j < 9; j++)
+            {
+              if (boxToRow[i] != 0 && (boxToRow[i] == boxToRow[j]) )
+                {
+                  errorCode |= (1 << 6);                /* set bit 7 */
+                }
+            }
+        }
+    }
   return errorCode;
 }
 
