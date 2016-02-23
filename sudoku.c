@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 
+
 /* This function reads in a sudoku puzzle, line-by-line.  It checks each
  * read character to see if it is valid \n, EOF, '.', or 0 - 9.  If it
  * finds EOF, sets an error bit and returns immediately.  If it finds an 
@@ -110,7 +111,7 @@ int validatePuzzleBoxes(int puzzle[])
 {
   int  boxToRow[9];
   int i, j, k, box, boxDelta, errorCode;
-  i = j = k = box, boxDelta, errorCode = 0;
+  i = j = k = box = boxDelta = errorCode = 0;
   for (box = 0; box < 9; box++)
     {
       boxDelta = ((box % 3) * 3) + ((box / 3) * 27);
@@ -135,11 +136,58 @@ int validatePuzzleBoxes(int puzzle[])
 
 /* This function logically reduces the given puzzle by using the rules of
  * Sudoku to fill in any spaces that can be found by inspecting rows,
- * columns, and boxes.
+ * columns, and boxes.  For blank squares in puzzle, sets bits 1-9. For filled
+ * squares, sets bit for number - i.e. if 7 in square, sets bit #7.  Once
+ * put in this form, uses NAND over each row, column, and box.  The bits
+ * left on in the square represent the possible values that square could
+ * have.  Keep looping over the puzzle until no more bits change.  If total
+ * number of bits in puzzle is 81- then puzzle is solved!  If any square has
+ * zero bits turned on- then puzzle is un-solvable.
  */
+unsigned int bitCount (unsigned int value)  /* counts bits turned on */
+{
+  unsigned int count = 0;
+  while (value > 0)                         /* until all bits are zero */
+    {
+      if ((value & 1) == 1)                 /* check lower bit */
+      count++;
+      value >>= 1;                          /* shift bits, removing lower bit */
+    }
+  return count;
+}
+
+void printBitPuzzle(int bitPuzzle[])        /* prints out bitPuzzle in hex */
+{
+  int i;
+  for (i = 0; i < 81; i += 3)
+    {
+      if (!(i%9)) printf("\n | ");
+      if (!(i%27)) printf("-----------------------------------------\n | ");
+      printf("%03x %03x %03x", bitPuzzle[i], bitPuzzle[i+1], bitPuzzle[i+2]);
+      printf(" | ");
+    }
+  printf("\n | --------------------------------------- |");
+  printf("\n\n");
+}
+  
 void crunchPuzzle(int puzzle[])
 {
-  /* WRITE ME */
+  int bitPuzzle[81];
+  int i, totalBits;
+  /* create bitPuzzle with # of bit on equal to value in puzzle */
+  for (i = 0; i < 81; i++)
+    {
+      if (puzzle[i] == 0) bitPuzzle[i] = 0x1ff;
+      else bitPuzzle[i] = 1 << (puzzle[i]-1);
+    }
+  printBitPuzzle(bitPuzzle);
+
+  /* calculate total bitCount of the puzzle - solved if 81 */
+  totalBits = 0;
+  for (i = 0; i < 81; i++) totalBits += bitCount(bitPuzzle[i]);
+  if (totalBits == 81) printf("SOLVED -- ");
+  printf("totalBits = %d\n\n", totalBits);
+
   if (puzzle[0]) return;
 }
 
