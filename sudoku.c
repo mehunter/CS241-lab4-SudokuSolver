@@ -3,8 +3,63 @@
 /* Lab 4: Sudoku Solver                */
 /***************************************/
 
+/* Set this definition to 0 to disable display of puzzle error messages */ 
+#define ERRMSG 1
+
+/* Set this definition to 0 to disable display bit info in crunchPuzzle */
+#define WORKWITHBITS 1
+
+/* Set this definition to 0 to disable display of Sudoku formated printing */
+#define SUDOKUSTYLE 1
+
 
 #include <stdio.h>
+
+         int readPuzzle(int puzzle[]);
+         int validatePuzzleRows(int puzzle[]);
+         int validatePuzzleCols(int puzzle[]);
+         int validatePuzzleBoxes(int puzzle[]);
+        void crunchPuzzle(int puzzle[]);
+        void printBitPuzzle(int bitPuzzle[]);
+unsigned int bitCount (unsigned int value);
+        void solvePuzzle(int puzzle[]);
+        void writePuzzle(int puzzle[]);
+
+
+
+int main(void)
+{
+  int puzzle[81];
+  int puzzleError;
+  
+  puzzleError = readPuzzle(puzzle);
+
+  /* Check puzzles for errors, crunch, solve, and write.  Keep doing this
+   * until error code 1 set which indicates EOF reached.
+   */
+  while ( !(puzzleError & 1) )
+    {
+      puzzleError |= validatePuzzleRows(puzzle);
+      puzzleError |= validatePuzzleCols(puzzle);
+      puzzleError |= validatePuzzleBoxes(puzzle);
+
+      if (puzzleError)
+	{
+	  printf("Error");
+	  if (ERRMSG) printf(" - %d", puzzleError);
+	  printf("\n\n");
+	}
+
+      else                                       /* puzzle is 'well-formed' */
+        {
+          crunchPuzzle(puzzle);
+          solvePuzzle(puzzle);
+          writePuzzle(puzzle);
+        }
+      puzzleError = readPuzzle(puzzle);
+    }
+  return 0;
+}
 
 
 /* This function reads in a sudoku puzzle, line-by-line.  It checks each
@@ -144,19 +199,47 @@ int validatePuzzleBoxes(int puzzle[])
  * number of bits in puzzle is 81- then puzzle is solved!  If any square has
  * zero bits turned on- then puzzle is un-solvable.
  */
-unsigned int bitCount (unsigned int value)  /* counts bits turned on */
+void crunchPuzzle(int puzzle[])
+{
+  int bitPuzzle[81];
+  int i, totalBits;
+  /* create bitPuzzle with # of bit on equal to value in puzzle */
+  for (i = 0; i < 81; i++)
+    {
+      if (puzzle[i] == 0) bitPuzzle[i] = 0x1ff;
+      else bitPuzzle[i] = 1 << (puzzle[i]-1);
+    }
+  if (WORKWITHBITS)
+    {
+      printBitPuzzle(bitPuzzle);
+
+      /* calculate total bitCount of the puzzle - solved if 81 */
+      totalBits = 0;
+      for (i = 0; i < 81; i++) totalBits += bitCount(bitPuzzle[i]);
+      if (totalBits == 81) printf("SOLVED -- ");
+      printf("totalBits = %d\n\n", totalBits);
+    }
+
+  if (puzzle[0]) return;
+}
+
+/* Helper function for crunchPuzzle that counts number of bits turned on
+ */
+unsigned int bitCount (unsigned int value)
 {
   unsigned int count = 0;
   while (value > 0)                         /* until all bits are zero */
     {
       if ((value & 1) == 1)                 /* check lower bit */
       count++;
-      value >>= 1;                          /* shift bits, removing lower bit */
+      value >>= 1;                          /* shift bits, remove lower bit */
     }
   return count;
 }
 
-void printBitPuzzle(int bitPuzzle[])        /* prints out bitPuzzle in hex */
+/* Helper function for crunchPuzzle that prints out bitPuzzle in hex 
+ */
+void printBitPuzzle(int bitPuzzle[])
 {
   int i;
   for (i = 0; i < 81; i += 3)
@@ -168,27 +251,6 @@ void printBitPuzzle(int bitPuzzle[])        /* prints out bitPuzzle in hex */
     }
   printf("\n | --------------------------------------- |");
   printf("\n\n");
-}
-  
-void crunchPuzzle(int puzzle[])
-{
-  int bitPuzzle[81];
-  int i, totalBits;
-  /* create bitPuzzle with # of bit on equal to value in puzzle */
-  for (i = 0; i < 81; i++)
-    {
-      if (puzzle[i] == 0) bitPuzzle[i] = 0x1ff;
-      else bitPuzzle[i] = 1 << (puzzle[i]-1);
-    }
-  printBitPuzzle(bitPuzzle);
-
-  /* calculate total bitCount of the puzzle - solved if 81 */
-  totalBits = 0;
-  for (i = 0; i < 81; i++) totalBits += bitCount(bitPuzzle[i]);
-  if (totalBits == 81) printf("SOLVED -- ");
-  printf("totalBits = %d\n\n", totalBits);
-
-  if (puzzle[0]) return;
 }
 
 /* This function uses recursive backtracking to solve the puzzle.
@@ -205,40 +267,28 @@ void solvePuzzle(int puzzle[])
 void writePuzzle(int puzzle[])
 {
   int i;
-  for ( i = 0; i < 81; ++i)
+  if (SUDOKUSTYLE)
     {
-      if (puzzle[i] != 0 ) printf("%d", puzzle[i]);
-      else printf(".");
+      for (i = 0; i < 81; i += 3)
+	{
+	  if (!(i%9)) printf("\n | ");
+	  if (!(i%27)) printf("--------------------------------\n | ");
+	  printf("%2d %2d %2d", puzzle[i], puzzle[i+1], puzzle[i+2]);
+	  printf(" | ");
+	}
+      printf("\n | ------------------------------ |");
+      printf("\n\n");
     }
-  printf("\n\n");
+
+  else
+    {
+      for ( i = 0; i < 81; ++i)
+	{
+	  if (puzzle[i] != 0 ) printf("%d", puzzle[i]);
+	  else printf(".");
+	}
+      printf("\n\n");
+    }
 }
 
 
-int main(int argc, char *argv[])
-{
-  int puzzle[81];
-  int puzzleError;
-  while (1)                                        /* read puzzles until EOF */
-    {
-      puzzleError = readPuzzle(puzzle);
-      if (puzzleError & 1) break;                  /* reached EOF, done! */
-      puzzleError |= validatePuzzleRows(puzzle);
-      puzzleError |= validatePuzzleCols(puzzle);
-      puzzleError |= validatePuzzleBoxes(puzzle);
-
-      /* Command line argument -e used to print error numbers for debugging */
-      if (puzzleError && (argc == 2) && (argv[1][0] == '-') &&
-          (argv[1][1] == 'e') && (argv[1][2] == '\0'))
-        {
-          printf("Error - %d\n\n", puzzleError);            
-        }
-      else if (puzzleError) printf("Error\n\n");
-      else                                         /* puzzle is 'well-formed' */
-        {
-          crunchPuzzle(puzzle);
-          solvePuzzle(puzzle);
-          writePuzzle(puzzle);
-        }
-    }
-  return 0;
-}
