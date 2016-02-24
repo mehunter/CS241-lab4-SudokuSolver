@@ -3,14 +3,14 @@
 /* Lab 4: Sudoku Solver                */
 /***************************************/
 
-/* Set this definition to 0 to disable display of puzzle error messages */ 
-#define ERRMSG 1
+/* Set this definition to 1 to enable display of puzzle error messages */ 
+#define ERRMSG 0
 
-/* Set this definition to 0 to disable display bit info in crunchPuzzle */
-#define WORKWITHBITS 1
+/* Set this definition to 1 to enable display bit info in crunchPuzzle */
+#define WORKWITHBITS 0
 
-/* Set this definition to 0 to disable display of Sudoku formated printing */
-#define SUDOKUSTYLE 1
+/* Set this definition to 1 to enable display of Sudoku formated printing */
+#define SUDOKUSTYLE 0
 
 
 #include <stdio.h>
@@ -217,7 +217,7 @@ void crunchPuzzle(int puzzle[])
       totalBits = 0;
       for (i = 0; i < 81; i++) totalBits += bitCount(bitPuzzle[i]);
       if (totalBits == 81) printf("SOLVED -- ");
-      printf("totalBits = %d\n\n", totalBits);
+      printf(" totalBits = %d\n\n", totalBits);
     }
 
   if (puzzle[0]) return;
@@ -244,13 +244,15 @@ void printBitPuzzle(int bitPuzzle[])
   int i;
   for (i = 0; i < 81; i += 3)
     {
-      if (!(i%9)) printf("\n | ");
-      if (!(i%27)) printf("-----------------------------------------\n | ");
+      if ( !( i % 27) )
+        {
+          printf("\n -------------------------------------------\n | ");
+        }
+      if ( !(i%9) && (i%27) ) printf("\n | ");
       printf("%03x %03x %03x", bitPuzzle[i], bitPuzzle[i+1], bitPuzzle[i+2]);
       printf(" | ");
     }
-  printf("\n | --------------------------------------- |");
-  printf("\n\n");
+  printf("\n -------------------------------------------\n");
 }
 
 /* This function uses recursive backtracking to solve the puzzle.
@@ -269,15 +271,18 @@ void writePuzzle(int puzzle[])
   int i;
   if (SUDOKUSTYLE)
     {
-      for (i = 0; i < 81; i += 3)
+      for (i = 0; i < 81; i++)
 	{
-	  if (!(i%9)) printf("\n | ");
-	  if (!(i%27)) printf("--------------------------------\n | ");
-	  printf("%2d %2d %2d", puzzle[i], puzzle[i+1], puzzle[i+2]);
-	  printf(" | ");
-	}
-      printf("\n | ------------------------------ |");
-      printf("\n\n");
+          if ( (i != 0) && !(i % 9) ) printf("|\n");
+          if ( (i == 0) || (i == 27) || (i == 54) )
+               printf(" ------------------------------------\n");
+          if ( !(i % 3) ) printf(" | ");
+          
+          
+          if (puzzle[i] == 0) printf(" . ");
+          else printf("%2d ", puzzle[i]);
+        }
+      printf("|\n ------------------------------------\n\n");
     }
 
   else
