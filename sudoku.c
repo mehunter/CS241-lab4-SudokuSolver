@@ -50,7 +50,9 @@ int main(void)
 	  printf("\n\n");
 	}
 
-      else                                       /* puzzle is 'well-formed' */
+      /* puzzle is 'well-formed', so solve it and write the results
+       */
+      else                                       
         {
           crunchPuzzle(puzzle);
           solvePuzzle(puzzle);
@@ -67,15 +69,15 @@ int main(void)
  * finds EOF, sets an error bit and returns immediately.  If it finds an 
  * invalid character, it sets an error bit.  It maintains a counter for 
  * the number of characters read to give an error for a puzzle that is too
- * long or too short if true sets an error bit. 
+ * long or too short if true sets an error bit. Echo puzzle to standard out.
  * 
  * errorCodes:
- * bit 1 - end of file
- * bit 2 - invalid character in puzzle
- * bit 3 - too many characters in puzzle
- * bit 4 - not enough characters in puzzle
+ *   bit 1 - end of file
+ *   bit 2 - invalid character in puzzle
+ *   bit 3 - too many characters in puzzle
+ *   bit 4 - not enough characters in puzzle
  *
- * If no errors, int readPuzzle() will return 0.
+ *   No errors - return 0.
  */
 int readPuzzle(int puzzle[])
 {
@@ -264,7 +266,9 @@ void solvePuzzle(int puzzle[])
 }
 
 
-/* This function writes out the (hopefully solved) puzzle.
+/* This function writes out the (hopefully solved) puzzle.  If definition
+ * for SUDOKUSTYLE = 1, then prints out as standard human readable puzzle.
+ * Otherwise, prints out on a single line per project spec.
  */
 void writePuzzle(int puzzle[])
 {
@@ -295,5 +299,3 @@ void writePuzzle(int puzzle[])
       printf("\n\n");
     }
 }
-
-
