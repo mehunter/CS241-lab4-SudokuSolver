@@ -22,6 +22,7 @@
         void crunchPuzzle(int puzzle[]);
         void printBitPuzzle(int bitPuzzle[]);
 unsigned int bitCount (unsigned int value);
+         int whichBit (int value);
         void solvePuzzle(int puzzle[]);
         void writePuzzle(int puzzle[]);
 
@@ -204,13 +205,57 @@ int validatePuzzleBoxes(int puzzle[])
 void crunchPuzzle(int puzzle[])
 {
   int bitPuzzle[81];
-  int i, totalBits;
+  int i, j, temp, totalBits, crunchItAgain;
   /* create bitPuzzle with # of bit on equal to value in puzzle */
   for (i = 0; i < 81; i++)
     {
-      if (puzzle[i] == 0) bitPuzzle[i] = 0x1ff;
+      if (puzzle[i] == 0) bitPuzzle[i] = 0;
       else bitPuzzle[i] = 1 << (puzzle[i]-1);
     }
+
+  /* Find a cell that is zero.  Use bitwise OR to find out which bits
+   * are used in its row, column, and box.
+   */
+  crunchItAgain = 1;
+  while (crunchItAgain)
+    {
+      crunchItAgain = 0;
+      for (i = 0; i < 81; i++)
+        {
+          if (bitPuzzle[i] == 0)
+            {
+              temp = 0;
+              for (j = 0; j < 9; j++)             /* loop for rows */
+                {
+                  temp |= bitPuzzle[((i / 9) * 9) + j];
+                }
+
+              for (j = 0; j < 9; j++)             /* loop for columns */
+                {
+                  temp |= bitPuzzle[(i + (j * 9)) % 81];
+                }
+
+              for (j = 0; j < 9; j++)             /* loop for boxes */
+                {                                 /* WRITE ME       */
+                  temp |= 0;
+                }
+                    
+              temp = 0x1ff - temp;
+
+              if (bitCount(temp) == 1)
+                {
+                  bitPuzzle[i] = temp;
+                  puzzle[i] =  whichBit(temp);
+                  if (!temp) printf("No solution\n");
+                  crunchItAgain = 1;
+                }
+            }
+        }
+    }
+  
+  /* code turned on to show bit process of working to reduce puzzle with
+   * obvious answers
+   */
   if (WORKWITHBITS)
     {
       printBitPuzzle(bitPuzzle);
@@ -237,6 +282,20 @@ unsigned int bitCount (unsigned int value)
       value >>= 1;                          /* shift bits, remove lower bit */
     }
   return count;
+}
+
+/* Helper function for crunchPuzzle that returns a decimal for a single bit
+ * turned on.
+ */
+int whichBit (int value)
+{
+  int decimal = 0;
+  while (value > 0)
+    {
+      decimal++;
+      value >>= 1;
+    }
+  return decimal;
 }
 
 /* Helper function for crunchPuzzle that prints out bitPuzzle in hex 
