@@ -206,20 +206,21 @@ void crunchPuzzle(int puzzle[])
 {
   int bitPuzzle[81];
   int i, j, temp, totalBits, crunchItAgain;
+  int boxStart;
   /* create bitPuzzle with # of bit on equal to value in puzzle */
-  for (i = 0; i < 81; i++)
-    {
-      if (puzzle[i] == 0) bitPuzzle[i] = 0;
-      else bitPuzzle[i] = 1 << (puzzle[i]-1);
-    }
-
-  /* Find a cell that is zero.  Use bitwise OR to find out which bits
-   * are used in its row, column, and box.
-   */
   crunchItAgain = 1;
-  while (crunchItAgain)
+  while (crunchItAgain < 81)
     {
-      crunchItAgain = 0;
+      for (i = 0; i < 81; i++)
+	{
+	  if (puzzle[i] == 0) bitPuzzle[i] = 0;
+	  else bitPuzzle[i] = 1 << (puzzle[i]-1);
+	}
+
+      /* Find a cell that is zero.  Use bitwise OR to find out which bits
+       * are used in its row, column, and box.
+       */
+
       for (i = 0; i < 81; i++)
         {
           if (bitPuzzle[i] == 0)
@@ -235,22 +236,22 @@ void crunchPuzzle(int puzzle[])
                   temp |= bitPuzzle[(i + (j * 9)) % 81];
                 }
 
-              for (j = 0; j < 9; j++)             /* loop for boxes */
-                {                                 /* WRITE ME       */
-                  temp |= 0;
+	      boxStart = ((i / 27) * 27) + ((i / 3) % 9);
+	      for (j = 0; j < 9; j++)             /* loop for boxes */
+                {                                 
+                  temp |= bitPuzzle[(boxStart + ((j / 3) * 9) + (j % 3))];
                 }
                     
               temp = 0x1ff - temp;
 
-              if (bitCount(temp) == 1)
+	      if (bitCount(temp) == 1)
                 {
-                  bitPuzzle[i] = temp;
-                  puzzle[i] =  whichBit(temp);
-                  if (!temp) printf("No solution\n");
-                  crunchItAgain = 1;
+		  bitPuzzle[i] = temp;
+		  puzzle[i] =  whichBit(temp);
                 }
             }
         }
+      ++crunchItAgain;	      
     }
   
   /* code turned on to show bit process of working to reduce puzzle with
