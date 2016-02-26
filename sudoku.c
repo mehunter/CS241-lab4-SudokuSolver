@@ -205,12 +205,14 @@ int validatePuzzleBoxes(int puzzle[])
 void crunchPuzzle(int puzzle[])
 {
   int bitPuzzle[81];
-  int i, j, temp, totalBits, crunchItAgain;
-  int boxStart;
+  int i, j, temp, totalBits, crunchItAgain, boxStart;
+  int boxMoves[] = {0, 1, 2, 9, 10, 12, 18, 19, 20};
   /* create bitPuzzle with # of bit on equal to value in puzzle */
   crunchItAgain = 1;
-  while (crunchItAgain < 81)
+  while (crunchItAgain)
+    crunchItAgain = 0;
     {
+      /* turn puzzle from decimal into bits */
       for (i = 0; i < 81; i++)
 	{
 	  if (puzzle[i] == 0) bitPuzzle[i] = 0;
@@ -225,33 +227,38 @@ void crunchPuzzle(int puzzle[])
         {
           if (bitPuzzle[i] == 0)
             {
-              temp = 0;
-              for (j = 0; j < 9; j++)             /* loop for rows */
+              temp = 0;              
+             /* loop for rows */
+              for (j = 0; j < 9; j++)
                 {
                   temp |= bitPuzzle[((i / 9) * 9) + j];
                 }
-
-              for (j = 0; j < 9; j++)             /* loop for columns */
+              
+              /* loop for columns */
+              for (j = 0; j < 9; j++)
                 {
                   temp |= bitPuzzle[(i + (j * 9)) % 81];
                 }
 
-	      boxStart = ((i / 27) * 27) + ((i / 3) % 9);
-	      for (j = 0; j < 9; j++)             /* loop for boxes */
+             /* loop for boxes */
+              boxStart = ( ( i / 27 ) * 27) + ( ( (i % 9) / 3 ) * 3);
+              for (j = 0; j < 9; j++)
                 {                                 
-                  temp |= bitPuzzle[(boxStart + ((j / 3) * 9) + (j % 3))];
+                  temp |= bitPuzzle[(boxStart + boxMoves[j])];
                 }
-                    
+              
               temp = 0x1ff - temp;
 
-	      if (bitCount(temp) == 1)
+              /* if left with a single bit on, then cell is determined */
+              bitPuzzle[i] = temp;
+              crunchItAgain = 1; /* puzzle changed, so crunch it again! */
+              if (bitCount(temp) == 1)
                 {
-		  bitPuzzle[i] = temp;
-		  puzzle[i] =  whichBit(temp);
+                  puzzle[i] =  whichBit(temp);
+
                 }
             }
         }
-      ++crunchItAgain;	      
     }
   
   /* code turned on to show bit process of working to reduce puzzle with
@@ -332,7 +339,7 @@ void solvePuzzle(int puzzle[])
  */
 void writePuzzle(int puzzle[])
 {
-  int i;
+  int i, pctSolved;
   if (SUDOKUSTYLE)
     {
       for (i = 0; i < 81; i++)
@@ -350,12 +357,15 @@ void writePuzzle(int puzzle[])
     }
 
   else
+    pctSolved = 0;
     {
       for ( i = 0; i < 81; ++i)
 	{
 	  if (puzzle[i] != 0 ) printf("%d", puzzle[i]);
 	  else printf(".");
+          pctSolved += puzzle[i];
 	}
-      printf("\n\n");
+      printf("\n");
+      printf("%d%% solved\n\n", pctSolved * 100 / 405);
     }
 }
