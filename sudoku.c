@@ -206,35 +206,35 @@ void crunchPuzzle(int puzzle[])
 {
   int bitPuzzle[81];
   int i, j, temp, totalBits, crunchItAgain, boxStart;
-  int boxMoves[] = {0, 1, 2, 9, 10, 12, 18, 19, 20};
+  int boxMoves[] = {0, 1, 2, 9, 10, 11, 18, 19, 20};
+  
   /* create bitPuzzle with # of bit on equal to value in puzzle */
-  crunchItAgain = 1;
-  while (crunchItAgain)
-    crunchItAgain = 0;
+  for (i = 0; i < 81; i++)
     {
-      /* turn puzzle from decimal into bits */
-      for (i = 0; i < 81; i++)
-	{
-	  if (puzzle[i] == 0) bitPuzzle[i] = 0;
-	  else bitPuzzle[i] = 1 << (puzzle[i]-1);
-	}
+      if (puzzle[i] == 0) bitPuzzle[i] = 0;
+      else bitPuzzle[i] = 1 << (puzzle[i]-1);
+    }
 
+  crunchItAgain = 1;     /* flag variable to track if puzzle needs crunch */
+  while (crunchItAgain)
+    {
+      crunchItAgain = 0;
       /* Find a cell that is zero.  Use bitwise OR to find out which bits
        * are used in its row, column, and box.
        */
-
       for (i = 0; i < 81; i++)
         {
           if (bitPuzzle[i] == 0)
             {
-              temp = 0;              
-             /* loop for rows */
+              temp = 0;
+
+              /*loop for rows */
               for (j = 0; j < 9; j++)
                 {
                   temp |= bitPuzzle[((i / 9) * 9) + j];
                 }
               
-              /* loop for columns */
+              /* loop for columns  */
               for (j = 0; j < 9; j++)
                 {
                   temp |= bitPuzzle[(i + (j * 9)) % 81];
@@ -246,16 +246,18 @@ void crunchPuzzle(int puzzle[])
                 {                                 
                   temp |= bitPuzzle[(boxStart + boxMoves[j])];
                 }
-              
-              temp = 0x1ff - temp;
 
+              /* temp is numbers used in row, col and box, but which values
+               * were not used- those are the remaining possibilities
+               */
+              temp = 0x1ff - temp;
+                            
               /* if left with a single bit on, then cell is determined */
-              bitPuzzle[i] = temp;
-              crunchItAgain = 1; /* puzzle changed, so crunch it again! */
               if (bitCount(temp) == 1)
                 {
+                  bitPuzzle[i] = temp;
                   puzzle[i] =  whichBit(temp);
-
+                  crunchItAgain = 1;
                 }
             }
         }
@@ -342,6 +344,7 @@ void writePuzzle(int puzzle[])
   int i, pctSolved;
   if (SUDOKUSTYLE)
     {
+      pctSolved = 0;
       for (i = 0; i < 81; i++)
 	{
           if ( (i != 0) && !(i % 9) ) printf("|\n");
@@ -352,20 +355,20 @@ void writePuzzle(int puzzle[])
           
           if (puzzle[i] == 0) printf(" . ");
           else printf("%2d ", puzzle[i]);
+          pctSolved += puzzle[i];
         }
-      printf("|\n ------------------------------------\n\n");
+      printf("|\n ------------------------------------\n");
+      printf("%d%% solved\n\n", pctSolved * 100 / 405);
     }
 
   else
-    pctSolved = 0;
     {
       for ( i = 0; i < 81; ++i)
 	{
 	  if (puzzle[i] != 0 ) printf("%d", puzzle[i]);
 	  else printf(".");
-          pctSolved += puzzle[i];
 	}
-      printf("\n");
-      printf("%d%% solved\n\n", pctSolved * 100 / 405);
+      printf("\n\n");
+
     }
 }
