@@ -5,22 +5,24 @@
 
 #include <stdio.h>
 
+/* function declarations */
+int readPuzzle(int puzzle[9][9]);
+void writePuzzle(int puzzle[9][9]);
+int isSafe(int puzzle[9][9], int index, int num);
+int solvePuzzle(int puzzle[9][9], int index);
+
 int main (void)
 {
-   int puzzle[9][9];
-   int error;
-   
-   int readPuzzle(int puzzle[9][9]);
-  void writePuzzle(int puzzle[9][9]);
-   int solvePuzzle(int puzzle[9][9]);
-
+  int puzzle[9][9];
+  int index = 0;
+  int error;
   error = readPuzzle(puzzle);
   if (error) printf("Error\n\n");
   else
   {
     /* in DEBUG mode, show initial puzzle in standard sudoku form */
     if (DEBUG) writePuzzle(puzzle);
-    solvePuzzle(puzzle);
+    solvePuzzle(puzzle, index);
     writePuzzle(puzzle);
   }
   return 0;
@@ -78,24 +80,76 @@ void writePuzzle(int puzzle[9][9])
     printf("\n\n");
   }
 
-int solvePuzzle(int puzzle[9][9])
+/*  This function determines whether num is a safe number to put into the
+ *  puzzle at the index.
+ */
+int isSafe(int puzzle[9][9], int index, int num)
 {
-  int row, col, emptyCellFlag;
+  int i, j;
+  int row = index / 9;
+  int col = index % 9;
+  int boxStartRow = row - (row % 3);
+  int boxStartCol = col - (col % 3);
 
-  emptyCellFlag = FALSE;
-  for (row = 0; row < 9; row++)
+  /* check if num okay to use in row */
+  for (i = 0; i < 9; i++)
   {
-    for (col = 0; col < 9; col++)
+    if (puzzle[row][i] == num)
     {
-      if (puzzle[row][col] == 0) emptyCellFlag = TRUE;
+      return FALSE;                       /* num already used in row */
+    }
+  }
+          
+  /* check if num okay to use in col */
+  for (i = 0; i < 9; i++)
+  {
+    if (puzzle[i][col] == num)
+      {
+        return FALSE;                   /* num already used in column */
+      }
+  }
+ 
+  /* check if num okay to use in box */
+  for (i = 0; i < 3; i++)
+  {
+    for (j = 0; j < 3; j++)
+    {
+      if (puzzle[boxStartRow + i][boxStartCol + j] == num)
+      {
+        return FALSE;                     /* num already used in box */
+      }
     }
   }
 
-  if (emptyCellFlag == FALSE)
+  /* num not already used in row, col or box -> try it */
+  /* printf("%d is safe at %d, %d\n", num, row, col); */
+  return TRUE;
+}
+
+int solvePuzzle(int puzzle[9][9], int index)
+{
+  int num;
+  int row = index / 9;
+  int col = index % 9;
+
+  if (index == 81) return TRUE;                 /* all cells are filled */
+  
+  if (puzzle[row][col] != 0)
   {
-    printf("Solved\n");
-    return TRUE;
+    return solvePuzzle(puzzle, ++index);        /* recursive call */
   }
 
-  return FALSE;
+  else
+  {
+    for (num = 1; num <= 9; num++)
+    {
+      if (isSafe(puzzle, index, num))
+      {
+        puzzle[row][col] = num;
+        if (solvePuzzle(puzzle, index)) return TRUE;
+        puzzle[row][col] = 0;
+      }
+    }
+    return FALSE;    
+  }
 }
