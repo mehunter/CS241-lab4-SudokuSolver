@@ -3,6 +3,9 @@
 /* Lab 4: Sudoku Solver                */
 /***************************************/
 
+#define TRUE 1
+#define FALSE 0
+
 /* Set this definition to 1 to enable display of puzzle error messages */ 
 #define ERRMSG 0
 
@@ -10,7 +13,7 @@
 #define WORKWITHBITS 0
 
 /* Set this definition to 1 to enable display of Sudoku formated printing */
-#define SUDOKUSTYLE 0
+#define SUDOKUSTYLE 1
 
 
 #include <stdio.h>
@@ -21,9 +24,14 @@
          int validatePuzzleBoxes(int puzzle[]);
         void crunchPuzzle(int puzzle[]);
         void printBitPuzzle(int bitPuzzle[]);
-unsigned int bitCount (unsigned int value);
-         int whichBit (int value);
-        void solvePuzzle(int puzzle[]);
+unsigned int bitCount(unsigned int value);
+         int whichBit(int value);
+         int solvePuzzle(int puzzle[]);
+         int blankCell(int puzzle[]);
+         int promisingNumber(int puzzle[], int i, int num);
+         int rowConflict(int puzzle[], int i, int num);
+         int colConflict(int puzzle[], int i, int num);
+         int boxConflict(int puzzle[], int i, int num);
         void writePuzzle(int puzzle[]);
 
 
@@ -56,7 +64,8 @@ int main(void)
       else                                       
         {
           crunchPuzzle(puzzle);
-          solvePuzzle(puzzle);
+          if (solvePuzzle(puzzle)) printf("SOLVED\n");
+          else printf("UNSOLVED\n");
           writePuzzle(puzzle);
         }
       puzzleError = readPuzzle(puzzle);
@@ -328,12 +337,85 @@ void printBitPuzzle(int bitPuzzle[])
 
 /* This function uses recursive backtracking to solve the puzzle.
  */
-void solvePuzzle(int puzzle[])
+int solvePuzzle(int puzzle[])
 {
-  /* WRITE ME */
-  if (puzzle[0]) return;
+  /* Find an a cell with value 0, not solved
+   * If there are none, return true
+   * 
+   * For digits 1 to 9
+   *   if there is no conflict for row, col, box
+   *      assign digit to cell and recursively try to fill rest of puzzle
+   *      if recursion successful, return true
+   *      if !successful, remove digit and try another
+   * if all digits have been tried and nothing worked, return false to trigger backtracking
+   */
+
+  int i, num, solved;
+
+  if ((i = blankCell(puzzle)) == FALSE) return TRUE;  /* Solved puzzle! All cells filled! */
+  printf("i = %d\n", i);
+  for (num = 1; num <= 9; num++)                /* check all values 1 - 9 */
+    {
+      if (promisingNumber(puzzle, i, num))      /* potentially a solution */
+        {
+          puzzle[i] = num;                      /* put num into puzzle */
+          if (solvePuzzle(puzzle)) return TRUE;
+          puzzle[i] = 0;
+        }
+    }
+  return FALSE;
 }
 
+int blankCell(int puzzle[])
+{
+  int i;
+  for (i = 0; i < 81; i++)
+    {
+      if (puzzle[i] == 0) return i;
+    }
+  return FALSE;
+}
+
+int promisingNumber(int puzzle[], int i, int num)
+{
+  return !rowConflict(puzzle, i, num) &&
+    !colConflict(puzzle, i, num) &&
+    !boxConflict(puzzle, i, num);
+
+}
+
+int rowConflict(int puzzle[], int i, int num)
+{
+  int j;
+  for (j = 0; j < 9; j++)
+    {
+      if (puzzle[(i + j) % 9] == num) return TRUE;
+    }
+  printf("%d col clear\n", i);
+  return FALSE;
+}
+
+int colConflict(int puzzle[], int i, int num)
+{
+  int j;
+  for (j = 0; j < 9; j++)
+    {
+      if (puzzle[((i + (j * 9)) % 81)] == num) return TRUE;
+    }
+  return FALSE;
+}
+
+int boxConflict(int puzzle[], int i, int num)
+{
+  int j, boxStart;
+  int boxMoves[] = {0, 1, 2, 9, 10, 11, 18, 19, 20};
+  boxStart = ( ( i / 27 ) * 27) + ( ( (i % 9) / 3 ) * 3);
+  for (j = 0; j < 9; j++)
+    {                                 
+      if (puzzle[(boxStart + boxMoves[j])] == num) return TRUE;
+    }
+  return FALSE;
+}
 
 /* This function writes out the (hopefully solved) puzzle.  If definition
  * for SUDOKUSTYLE = 1, then prints out as standard human readable puzzle.
