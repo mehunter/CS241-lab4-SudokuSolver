@@ -1,6 +1,9 @@
 /***************************************/
 /* Matt Hunter -- CS241.01 Spring 2016 */
 /* Lab 4: Sudoku Solver                */
+/*                                     */
+/* Program to solve sudoku puzzles if  */
+/* they are 'well-formed'.             */
 /***************************************/
 
 /* Set DEBUG to FALSE to perform per spec.  Set to TRUE to run in debug mode */
@@ -12,11 +15,13 @@
 
 /* function declarations */
 int readPuzzle(int puzzle[9][9]);
-int findPuzzleErrors(int puzzle[9][9]);
-void writePuzzle(int puzzle[9][9]);
-int isSafe(int puzzle[9][9], int index, int num);
+int findRowErrors(int puzzle[9][9]);
+int findColErrors(int puzzle[9][9]);
+int findBoxErrors(int puzzle[9][9]);
 int solvePuzzle(int puzzle[9][9], int index);
+int isSafe(int puzzle[9][9], int index, int num);
 int noSolution(int puzzle[9][9]);
+void writePuzzle(int puzzle[9][9]);
 
 int main (void)
 {
@@ -26,7 +31,9 @@ int main (void)
 
   while ((error = readPuzzle(puzzle)) != EOF)
   {
-    error += findPuzzleErrors(puzzle);
+    error += findRowErrors(puzzle);
+    error += findColErrors(puzzle);
+    error += findBoxErrors(puzzle);
 
     if (error) printf("Error\n\n");
     else
@@ -40,12 +47,14 @@ int main (void)
   return 0;
 }
 
-/*  readPuzzle function fills in the array puzzle[][] with sudoku values from 
- *  standard in.  If it finds a value that is not . or 1-9, then it returns
- *  TRUE as an error code.  Also, if a puzzle consists of some quantity other
- *  than 81 entries, it returns TRUE as an error code.  If there are no errors
- *  in the quantity or range of values, it returns FALSE.  
- *  As required by the spec, whatever puzzle it reads is echoed to standard out.
+
+/* readPuzzle() function fills in the array puzzle[][] with sudoku values from 
+ * standard in.  If it finds a value that is not . or 1-9, then it returns
+ * TRUE as an error code.  If a puzzle consists of some quantity other than
+ * 81 entries, it returns TRUE as an error code.  If there are no errors
+ * in the quantity or range of values, it returns FALSE.  
+ * As required by the spec, puzzle is echoed to standard out regardless of
+ * whether it contains errors or not.
  */
 int readPuzzle(int puzzle[9][9])
 {
@@ -68,12 +77,14 @@ int readPuzzle(int puzzle[9][9])
   return error;
 }
 
-/* validatePuzzle function verifies that the puzzle is 'well-formed' such that
- * as stated, there are no duplicate entries in any row, column or box.
+
+/* findRowErrors() function checks to see if there is a duplicate entry in any
+ * row.  If there is, it returns TRUE to signal an error, otherwise returns
+ * FALSE for no error.
  */
-int findPuzzleErrors(int puzzle[9][9])
+int findRowErrors(int puzzle[9][9])
 {
-  int i, j, row, col;
+  int row, col, i;
   
   /* check rows */
   for (row = 0; row < 9; row++)
@@ -89,8 +100,17 @@ int findPuzzleErrors(int puzzle[9][9])
       }
     }
   }
+  return FALSE;
+}
 
-  /* check columns */
+
+/* findColErrors() function checks to see if there is a duplicate entry in any
+ * column.  If there is, it returns TRUE to signal an error, otherwise returns
+ * FALSE for no error.
+ */
+int findColErrors(int puzzle[9][9])
+{
+  int row, col, i;
   for (col = 0; col < 9; col++)
   {
     for (row = 0; row < 9; row++)
@@ -104,8 +124,16 @@ int findPuzzleErrors(int puzzle[9][9])
       }
     }
   }
+  return FALSE;
+}
 
-  /* check boxes */
+/* findBoxErrors() function checks to see if there is a duplicate entry in any
+ * box.  If there is, it returns TRUE to signal an error, otherwise returns
+ * FALSE for no error.
+ */
+int findBoxErrors(int puzzle[9][9])
+{
+  int row, col, i, j;
   for (row = 0; row < 9; row += 3)
   {
     for (col = 0; col < 9; col += 3)
@@ -124,11 +152,15 @@ int findPuzzleErrors(int puzzle[9][9])
       }
     }
   }
-
-  /* no error found in puzzle */
   return FALSE;
 }
 
+
+/* noSolution() function checks to see if the puzzle that came back from
+ * solvePuzzle doesn't have any 0's, which means that no solution was
+ * found.  If the puzzle does not have a solution, it prints "No solution"
+ * and returns TRUE.  Otherwise, it returns FALSE.
+ */
 int noSolution(int puzzle[9][9])
 {
   int row, col;
@@ -146,7 +178,9 @@ int noSolution(int puzzle[9][9])
   return FALSE;
 }
 
-/* writePuzzle function writes out the sudoku puzzle from the array puzzle[][].
+
+/* writePuzzle() function writes out the sudoku puzzle from the array 
+ * puzzle[][].
  * If DEBUG is TRUE, then it writes out the puzzle in standard sudoku form. 
  * If DEBUG is FALSE, it writes out the puzzle in the form required by the spec.
  */
@@ -171,8 +205,41 @@ void writePuzzle(int puzzle[9][9])
     printf("\n\n");
   }
 
-/*  This function determines whether num is a safe number to put into the
- *  puzzle at the index.
+
+/* solvePuzzle() function is the recursive function at the heart of solving
+ * the sudoku puzzles once they have been screened for errors.
+ */
+int solvePuzzle(int puzzle[9][9], int index)
+{
+  int num;
+  int row = index / 9;
+  int col = index % 9;
+
+  if (index == 81) return TRUE;                 /* all cells are filled */
+  
+  if (puzzle[row][col] != 0)
+  {
+    return solvePuzzle(puzzle, ++index);        /* recursive call */
+  }
+
+  else
+  {
+    for (num = 1; num <= 9; num++)
+    {
+      if (isSafe(puzzle, index, num))
+      {
+        puzzle[row][col] = num;
+        if (solvePuzzle(puzzle, index)) return TRUE;
+        puzzle[row][col] = 0;
+      }
+    }
+    return FALSE;    
+  }
+}
+
+
+/* isSafe() function is a helper function to solvePuzzle which determines 
+ * whether num is a safe number to put into the puzzle at the index.
  */
 int isSafe(int puzzle[9][9], int index, int num)
 {
@@ -212,35 +279,6 @@ int isSafe(int puzzle[9][9], int index, int num)
     }
   }
 
-  /* num not already used in row, col or box -> try it */
-  /* printf("%d is safe at %d, %d\n", num, row, col); */
+  /* num not already used in row, col or box.  Returns TRUE. */
   return TRUE;
-}
-
-int solvePuzzle(int puzzle[9][9], int index)
-{
-  int num;
-  int row = index / 9;
-  int col = index % 9;
-
-  if (index == 81) return TRUE;                 /* all cells are filled */
-  
-  if (puzzle[row][col] != 0)
-  {
-    return solvePuzzle(puzzle, ++index);        /* recursive call */
-  }
-
-  else
-  {
-    for (num = 1; num <= 9; num++)
-    {
-      if (isSafe(puzzle, index, num))
-      {
-        puzzle[row][col] = num;
-        if (solvePuzzle(puzzle, index)) return TRUE;
-        puzzle[row][col] = 0;
-      }
-    }
-    return FALSE;    
-  }
 }
