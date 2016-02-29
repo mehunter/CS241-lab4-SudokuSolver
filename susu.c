@@ -7,6 +7,7 @@
 
 /* function declarations */
 int readPuzzle(int puzzle[9][9]);
+int validatePuzzle(int puzzle[9][9]);
 void writePuzzle(int puzzle[9][9]);
 int isSafe(int puzzle[9][9], int index, int num);
 int solvePuzzle(int puzzle[9][9], int index);
@@ -16,14 +17,19 @@ int main (void)
   int puzzle[9][9];
   int index = 0;
   int error;
-  error = readPuzzle(puzzle);
-  if (error) printf("Error\n\n");
-  else
+
+  while ((error = readPuzzle(puzzle)) != EOF)
   {
-    /* in DEBUG mode, show initial puzzle in standard sudoku form */
-    if (DEBUG) writePuzzle(puzzle);
-    solvePuzzle(puzzle, index);
-    writePuzzle(puzzle);
+    error += validatePuzzle(puzzle);
+
+    if (error) printf("Error\n\n");
+    else
+    {
+      /* in DEBUG mode, show initial puzzle in standard sudoku form */
+      if (DEBUG) writePuzzle(puzzle);
+      solvePuzzle(puzzle, index);    /*-- uncomment code */
+      writePuzzle(puzzle);
+    }
   }
   return 0;
 }
@@ -42,6 +48,7 @@ int readPuzzle(int puzzle[9][9])
 
   for (i = 0; (num = getchar()) != '\n'; i++)
     {
+      if (num == EOF) return EOF;
       putchar(num);
       if ((num < '1' || num > '9') && (num != '.')) error = TRUE;
       if (num == '.') num = '0';
@@ -55,6 +62,49 @@ int readPuzzle(int puzzle[9][9])
   return error;
 }
 
+/* validatePuzzle function verifies that the puzzle is 'well-formed' such that
+ * as stated, there are no duplicate entries in any row, column or box.
+ */
+int validatePuzzle(int puzzle[9][9])
+{
+  int i, row, col;
+
+  /* check rows */
+  for (row = 0; row < 9; row++)
+  {
+    for (col = 0; col < 9; col++)
+    {
+      for (i = col + 1; i < 9; i++)
+      {
+        if ( (puzzle[row][col] != 0) && (puzzle[row][col] == puzzle[row][i]) )
+        {
+          return 1;
+        }
+      }
+    }
+  }
+
+  /* check columns */
+  for (col = 0; col < 9; col++)
+  {
+    for (row = 0; row < 9; row++)
+    {
+      for (i = row + 1; i < 9; i++)
+      {
+        if ( (puzzle[row][col] != 0) && (puzzle[row][col] == puzzle[i][col]) )
+        {
+          return 1;
+        }
+      }
+    }
+  }
+
+  /* check boxes */
+
+
+  /* no duplicated detected in rows, columns or boxes */
+  return 0;
+}
 /* writePuzzle function writes out the sudoku puzzle from the array puzzle[][].
  * If DEBUG is TRUE, then it writes out the puzzle in standard sudoku form. 
  * If DEBUG is FALSE, it writes out the puzzle in the form required by the spec.
